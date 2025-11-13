@@ -7,7 +7,6 @@ const postSchema = new Schema({
     ref: 'User',
     required: true
   },
-  // --- NEW: Add the category field ---
   category: {
     type: Schema.Types.ObjectId,
     ref: 'Category',
@@ -21,6 +20,11 @@ const postSchema = new Schema({
     type: String, 
     default: ''
   },
+  // --- NEW: Add the likes array ---
+  likes: [{
+    type: Schema.Types.ObjectId,
+    ref: 'User'
+  }],
   comments: [{
     type: Schema.Types.ObjectId,
     ref: 'Comment'
@@ -30,4 +34,5 @@ const postSchema = new Schema({
 });
 
 const Post = mongoose.model('Post', postSchema);
+
 module.exports = Post;

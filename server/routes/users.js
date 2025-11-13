@@ -1,5 +1,6 @@
 const router = require('express').Router();
 const User = require('../models/user.model');
+const Post = require('../models/post.model'); // We need the Post model
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
@@ -29,7 +30,7 @@ router.post('/register', async (req, res) => {
     });
 
   } catch (err) {
-    console.error("Register Error:", err.message); // Better error logging
+    console.error("Register Error:", err.message);
     res.status(500).json('Error: ' + err.message);
   }
 });
@@ -67,6 +68,31 @@ router.post('/login', async (req, res) => {
     });
   } catch (err) {
     console.error("Login Error:", err.message);
+    res.status(500).json('Error: ' + err.message);
+  }
+});
+
+// --- NEW: GET User Profile Page ---
+// This route fetches a user's profile and all their posts
+router.get('/:username', async (req, res) => {
+  try {
+    // Find the user by their username
+    const user = await User.findOne({ username: req.params.username }).select('-password');
+    if (!user) {
+      return res.status(404).json({ msg: 'User not found' });
+    }
+
+    // Find all posts made by that user
+    const posts = await Post.find({ author: user._id })
+      .sort({ createdAt: -1 })
+      .populate('author', 'username')
+      .populate('category', 'name');
+    
+    // Send back the user's info and their posts
+    res.json({ user, posts });
+
+  } catch (err) {
+    console.error("Profile fetch error:", err.message);
     res.status(500).json('Error: ' + err.message);
   }
 });

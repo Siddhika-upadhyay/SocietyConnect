@@ -1,5 +1,6 @@
 import React, { useContext } from 'react';
-import { Box, Typography, Divider, IconButton } from '@mui/material';
+import { Box, Typography, Divider, IconButton, Link } from '@mui/material';
+import { Link as RouterLink } from 'react-router-dom'; // Import RouterLink
 import DeleteIcon from '@mui/icons-material/Delete';
 import { AuthContext } from '../context/AuthContext';
 
@@ -16,9 +17,12 @@ function CommentList({ comments, onCommentDeleted }) {
         <Box key={comment._id || index} sx={{ mb: 1 }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <Typography variant="body2" sx={{ fontStyle: comment.isDeleted ? 'italic' : 'normal', color: comment.isDeleted ? 'text.secondary' : 'text.primary' }}>
-              <strong>{comment.author ? comment.author.username : 'User'}:</strong> {comment.text}
+              {/* --- Make the username a clickable link --- */}
+              <Link component={RouterLink} to={`/profile/${comment.author?.username}`} sx={{ fontWeight: 'bold' }}>
+                {comment.author ? comment.author.username : 'User'}
+              </Link>
+              : {comment.text}
             </Typography>
-            {/* Show delete button only if the user is the author and the comment isn't already deleted */}
             {user && comment.author && user.id === comment.author._id && !comment.isDeleted && (
               <IconButton size="small" onClick={() => onCommentDeleted(comment._id)}>
                 <DeleteIcon fontSize="small" />

@@ -8,9 +8,20 @@ function NotificationMenu({ anchorEl, isOpen, onClose, notifications }) {
   const navigate = useNavigate();
 
   const handleNotificationClick = (notification) => {
-    // We can add logic here to navigate to the specific post
-    // For now, just close the menu
+    // We could add logic to navigate to the specific post
     onClose();
+  };
+
+  // --- NEW: Helper function to render notification text ---
+  const renderNotificationText = (notif) => {
+    switch (notif.type) {
+      case 'comment':
+        return `<strong>${notif.sender?.username || 'Someone'}</strong> commented on your post.`;
+      case 'like':
+        return `<strong>${notif.sender?.username || 'Someone'}</strong> liked your post.`;
+      default:
+        return 'You have a new notification.';
+    }
   };
 
   return (
@@ -38,9 +49,11 @@ function NotificationMenu({ anchorEl, isOpen, onClose, notifications }) {
               whiteSpace: 'normal',
             }}
           >
-            <Typography variant="body2">
-              <strong>{notif.sender?.username || 'Someone'}</strong> commented on your post.
-            </Typography>
+            {/* Use the helper function to display the correct text */}
+            <Typography 
+              variant="body2" 
+              dangerouslySetInnerHTML={{ __html: renderNotificationText(notif) }} 
+            />
           </MenuItem>
         ))
       )}

@@ -16,8 +16,15 @@ function RegisterPage() {
       alert('Registration successful! Please log in.');
       navigate('/login');
     } catch (error) {
-      console.error('Registration failed:', error);
-      alert('Registration failed. Username might already be taken.');
+      // --- THIS IS THE UPGRADED ERROR HANDLING ---
+      if (error.response && error.response.data && error.response.data.msg) {
+        // If the server sent a specific error message, show it
+        alert(error.response.data.msg);
+      } else {
+        // Otherwise, show a generic error
+        console.error('Registration failed:', error);
+        alert('Registration failed. Please try again.');
+      }
     }
   };
 
