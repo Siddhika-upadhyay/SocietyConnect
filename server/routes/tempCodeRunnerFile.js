@@ -80,11 +80,9 @@ router.put('/:postId/like', auth, async (req, res) => {
           post: post._id,
         });
         await notification.save();
-        // Populate sender data for real-time notification
-        const populatedNotification = await Notification.findById(notification._id).populate('sender', 'name email');
         const recipientSocketId = userSocketMap.get(post.author.toString());
         if (recipientSocketId) {
-          io.to(recipientSocketId).emit('new_notification', populatedNotification);
+          io.to(recipientSocketId).emit('new_notification', notification);
         }
       }
     }
@@ -132,11 +130,9 @@ router.post('/:postId/comments', auth, async (req, res) => {
         post: post._id,
       });
       await notification.save();
-      // Populate sender data for real-time notification
-      const populatedNotification = await Notification.findById(notification._id).populate('sender', 'name email');
       const recipientSocketId = userSocketMap.get(post.author.toString());
       if (recipientSocketId) {
-        io.to(recipientSocketId).emit('new_notification', populatedNotification);
+        io.to(recipientSocketId).emit('new_notification', notification);
       }
     }
     res.status(201).json(populatedComment);
@@ -162,55 +158,6 @@ router.delete('/comments/:commentId', auth, async (req, res) => {
     const userSocketMap = req.app.get('userSocketMap');
     io.emit('comment_deleted', { postId: post._id.toString(), commentId: req.params.commentId });
     res.json({ msg: 'Comment deleted' });
-  } catch (err) {
-    res.status(500).json('Error: ' + err);
-  }
-});
-
-// --- PUT: Update a post ---
-router.put('/:postId', auth, upload.single('image'), async (req, res) => {
-  try {
-    const post = await Post.findById(req.params.postId);
-    if (!post) return res.status(404).json({ msg: 'Post not found' });
-    if (post.author.toString() !== req.user.id) {
-      return res.status(401).json({ msg: 'User not authorized' });
-    }
-
-    const { content, category } = req.body;
-    if (content !== undefined) post.content = content;
-    if (category !== undefined) post.category = category;
-    if (req.file) post.imageUrl = req.file.path;
-
-    const savedPost = await post.save();
-    const populatedPost = await Post.findById(savedPost._id)
-      .populate('author', 'name email')
-      .populate('category', 'name')
-      .populate({
-        path: 'comments',
-        populate: { path: 'author', select: 'name email' }
-      });
-
-    const io = req.app.get('socketio');
-    io.emit('post_updated', populatedPost);
-    res.json(populatedPost);
-  } catch (err) {
-    res.status(500).json('Error: ' + err);
-  }
-});
-
-// --- DELETE: Delete a post ---
-router.delete('/:postId', auth, async (req, res) => {
-  try {
-    const post = await Post.findById(req.params.postId);
-    if (!post) return res.status(404).json({ msg: 'Post not found' });
-    if (post.author.toString() !== req.user.id) {
-      return res.status(401).json({ msg: 'User not authorized' });
-    }
-
-    await Post.findByIdAndDelete(req.params.postId);
-    const io = req.app.get('socketio');
-    io.emit('post_deleted', req.params.postId);
-    res.json({ msg: 'Post deleted' });
   } catch (err) {
     res.status(500).json('Error: ' + err);
   }

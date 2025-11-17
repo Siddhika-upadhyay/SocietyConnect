@@ -14,17 +14,16 @@ const notificationSchema = new Schema({
     ref: 'User', 
     required: true 
   },
-  // The type of notification (e.g., 'comment' or 'like')
-  type: { 
-    type: String, 
-    required: true, 
-    enum: ['comment', 'like'] 
+  // The type of notification (e.g., 'comment', 'like', or 'message')
+  type: {
+    type: String,
+    required: true,
+    enum: ['comment', 'like', 'message']
   },
-  // The post that the notification is related to
-  post: { 
-    type: Schema.Types.ObjectId, 
-    ref: 'Post', 
-    required: true 
+  // The post that the notification is related to (optional for message notifications)
+  post: {
+    type: Schema.Types.ObjectId,
+    ref: 'Post'
   },
   // A flag to see if the user has read the notification yet
   read: { 

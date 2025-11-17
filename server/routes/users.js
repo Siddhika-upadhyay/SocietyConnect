@@ -7,25 +7,35 @@ const jwt = require('jsonwebtoken');
 // --- REGISTER a new user ---
 router.post('/register', async (req, res) => {
   try {
-    const { username, password } = req.body;
-    if (!username || !password) {
+    const { name, email, password, phone } = req.body;
+    if (!name || !email || !password || !phone) {
       return res.status(400).json({ msg: 'Please enter all fields' });
     }
     if (password.length < 6) {
       return res.status(400).json({ msg: 'Password must be at least 6 characters' });
     }
 
-    const existingUser = await User.findOne({ username });
+    const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ msg: 'User already exists' });
     }
 
-    const newUser = new User({ username, password });
+    const newUser = new User({ name, email, password, phone });
     const savedUser = await newUser.save();
+
+    const token = jwt.sign(
+      { id: savedUser._id },
+      process.env.JWT_SECRET || 'your_jwt_secret',
+      { expiresIn: '1h' }
+    );
+
     res.json({
+      token,
       user: {
         id: savedUser._id,
-        username: savedUser.username
+        email: savedUser.email,
+        name: savedUser.name,
+        phone: savedUser.phone
       }
     });
 
@@ -38,12 +48,12 @@ router.post('/register', async (req, res) => {
 // --- LOGIN a user ---
 router.post('/login', async (req, res) => {
   try {
-    const { username, password } = req.body;
-    if (!username || !password) {
+    const { email, password } = req.body;
+    if (!email || !password) {
       return res.status(400).json({ msg: 'Please enter all fields' });
     }
 
-    const user = await User.findOne({ username });
+    const user = await User.findOne({ email });
     if (!user) {
       return res.status(400).json({ msg: 'Invalid credentials' });
     }
@@ -54,16 +64,17 @@ router.post('/login', async (req, res) => {
     }
 
     const token = jwt.sign(
-      { id: user._id }, 
-      process.env.JWT_SECRET || 'your_jwt_secret', 
+      { id: user._id },
+      process.env.JWT_SECRET || 'your_jwt_secret',
       { expiresIn: '1h' }
     );
-    
+
     res.json({
       token,
       user: {
         id: user._id,
-        username: user.username
+        email: user.email,
+        name: user.name
       }
     });
   } catch (err) {
@@ -74,10 +85,10 @@ router.post('/login', async (req, res) => {
 
 // --- NEW: GET User Profile Page ---
 // This route fetches a user's profile and all their posts
-router.get('/:username', async (req, res) => {
+router.get('/:email', async (req, res) => {
   try {
-    // Find the user by their username
-    const user = await User.findOne({ username: req.params.username }).select('-password');
+    // Find the user by their email
+    const user = await User.findOne({ email: req.params.email }).select('-password');
     if (!user) {
       return res.status(404).json({ msg: 'User not found' });
     }
@@ -85,9 +96,13 @@ router.get('/:username', async (req, res) => {
     // Find all posts made by that user
     const posts = await Post.find({ author: user._id })
       .sort({ createdAt: -1 })
-      .populate('author', 'username')
-      .populate('category', 'name');
-    
+      .populate('author', 'email name')
+      .populate('category', 'name')
+      .populate({
+        path: 'comments',
+        populate: { path: 'author', select: 'name email' }
+      });
+
     // Send back the user's info and their posts
     res.json({ user, posts });
 

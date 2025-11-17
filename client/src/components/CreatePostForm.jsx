@@ -1,13 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import {
   Card, TextField, Button, Box, Input, Typography,
   Select, MenuItem, FormControl, InputLabel
 } from '@mui/material';
+import { ThemeContext } from '../context/ThemeContext';
 
 function CreatePostForm({ onPostCreated, categories }) {
   const [content, setContent] = useState('');
   const [imageFile, setImageFile] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState('');
+  const { theme } = useContext(ThemeContext);
 
   const handleFileChange = (e) => {
     setImageFile(e.target.files[0]);
@@ -32,32 +34,89 @@ function CreatePostForm({ onPostCreated, categories }) {
     <Card sx={{ p: 2, boxShadow: 'none', border: '1px solid #ddd' }}>
       <Box component="form" onSubmit={handleSubmit}>
         
-        <FormControl fullWidth sx={{ mb: 2 }}>
-          <InputLabel id="category-select-label">Category</InputLabel>
-          <Select
-            labelId="category-select-label"
-            id="category-select"
-            value={selectedCategory}
-            label="Category"
-            onChange={(e) => setSelectedCategory(e.target.value)}
+                  <FormControl
+            fullWidth
+            sx={{
+              mb: 2,
+              '& .MuiInputLabel-root': {
+                color: theme === 'dark' ? '#ffffff' : 'inherit',
+              },
+              '& .MuiOutlinedInput-root': {
+                color: theme === 'dark' ? '#ffffff' : 'inherit',
+                '& fieldset': {
+                  borderColor: theme === 'dark' ? '#ffffff55' : 'inherit',
+                },
+                '&:hover fieldset': {
+                  borderColor: theme === 'dark' ? '#bbbbbb' : 'inherit',
+                },
+                '&.Mui-focused fieldset': {
+                  borderColor: theme === 'dark' ? '#ffffff' : 'inherit',
+                },
+              },
+            }}
           >
-            {categories.map((cat) => (
-              <MenuItem key={cat._id} value={cat._id}>
-                {cat.name}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-        
+            <InputLabel id="category-select-label">
+              Category
+            </InputLabel>
+
+            <Select
+              labelId="category-select-label"
+              id="category-select"
+              value={selectedCategory}
+              label="Category"
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              MenuProps={{
+                PaperProps: {
+                  sx: {
+                    bgcolor: theme === 'dark' ? '#111' : '#fff',
+                    color: theme === 'dark' ? '#fff' : '#000',
+                  }
+                }
+              }}
+            >
+              {categories.map((cat) => (
+                <MenuItem
+                  key={cat._id}
+                  value={cat._id}
+                  sx={{
+                    bgcolor: theme === 'dark' ? '#111' : 'transparent',
+                    color: theme === 'dark' ? '#fff' : '#000'
+                  }}
+                >
+                  {cat.name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
+                  
         <TextField
-          label="What's on your mind?"
-          multiline
-          rows={3}
-          variant="outlined"
-          fullWidth
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-        />
+            label="What's on your mind?"
+            multiline
+            rows={3}
+            variant="outlined"
+            fullWidth
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            sx={{
+              '& .MuiInputLabel-root': {
+                color: theme === 'dark' ? '#ffffff' : 'inherit'
+              },
+              '& .MuiOutlinedInput-root': {
+                color: theme === 'dark' ? '#ffffff' : 'inherit',
+                '& fieldset': {
+                  borderColor: theme === 'dark' ? '#ffffff55' : 'inherit'
+                },
+                '&:hover fieldset': {
+                  borderColor: theme === 'dark' ? '#bbbbbb' : 'inherit'
+                },
+                '&.Mui-focused fieldset': {
+                  borderColor: theme === 'dark' ? '#ffffff' : 'inherit'
+                }
+              }
+            }}
+          />
+
         
         <Box sx={{ mt: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
           <Button variant="outlined" component="label" size="small">
@@ -70,7 +129,7 @@ function CreatePostForm({ onPostCreated, categories }) {
               accept="image/*" 
             />
           </Button>
-          {imageFile && <Typography variant="body2" color="text.secondary">{imageFile.name}</Typography>}
+          {imageFile && <Typography variant="body2" sx={{ color: theme === 'dark' ? '#f3f1f1ff' : 'text.secondary' }}>{imageFile.name}</Typography>}
         </Box>
 
         <Button

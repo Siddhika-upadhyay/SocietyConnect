@@ -1,41 +1,46 @@
 import React, { useState, useEffect, useContext } from 'react';
-import axios from 'axios';
 import io from 'socket.io-client';
-import { Container, Box, Chip } from '@mui/material';
-import CreatePostForm from '../components/CreatePostForm';
+import { Container, Box, Chip, TextField, InputAdornment, Typography } from '@mui/material';
+import SearchIcon from '@mui/icons-material/Search';
 import PostCard from '../components/PostCard';
-import { AuthContext } from '../context/AuthContext';
+import { AuthContext, api } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
-const API_URL = 'http://localhost:5000/api';
-const SOCKET_URL = 'http://localhost:5000';
+const SOCKET_URL = 'http://localhost:5001';
 
-function HomePage() {
+function HomePage({ searchQuery: propSearchQuery }) {
   const [posts, setPosts] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [selectedCategory, setSelectedCategory] = useState(null); 
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const { user, token } = useContext(AuthContext);
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!token) {
-      navigate('/login');
-      return;
-    }
+    setSearchQuery(propSearchQuery || '');
+  }, [propSearchQuery]);
 
+  useEffect(() => {
     const fetchPosts = async () => {
-      let url = `${API_URL}/posts`;
+      let url = '/posts';
+      const params = new URLSearchParams();
       if (selectedCategory) {
-        url += `?category=${selectedCategory}`;
+        params.append('category', selectedCategory);
       }
-      const response = await axios.get(url);
+      if (searchQuery) {
+        params.append('search', searchQuery);
+      }
+      if (params.toString()) {
+        url += `?${params.toString()}`;
+      }
+      const response = await api.get(url);
       setPosts(response.data);
     };
     fetchPosts();
 
     const fetchCategories = async () => {
       try {
-        const response = await axios.get(`${API_URL}/categories`);
+        const response = await api.get('/categories');
         setCategories(response.data);
       } catch (err) {
         console.error("Error fetching categories:", err);
@@ -76,7 +81,7 @@ function HomePage() {
     
     return () => socket.disconnect();
     
-  }, [token, navigate, selectedCategory]);
+  }, [selectedCategory, searchQuery]);
 
   const authHeader = (contentType = 'application/json') => ({
     headers: { 'x-auth-token': token, 'Content-Type': contentType },
@@ -87,23 +92,23 @@ function HomePage() {
     formData.append('content', content);
     formData.append('category', categoryId);
     if (imageFile) formData.append('image', imageFile);
-    await axios.post(`${API_URL}/posts`, formData, authHeader('multipart/form-data'));
+    await api.post('/posts', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
   };
 
   const handleCommentAdded = async (postId, text) => {
-    await axios.post(`${API_URL}/posts/${postId}/comments`, { text }, authHeader());
+    await api.post(`/posts/${postId}/comments`, { text });
   };
 
   const handleCommentDeleted = async (commentId) => {
     if (window.confirm('Are you sure you want to delete this comment?')) {
-      await axios.delete(`${API_URL}/posts/comments/${commentId}`, authHeader());
+      await api.delete(`/posts/comments/${commentId}`);
     }
   };
 
   // --- NEW: Handler for liking a post ---
   const handleLikePost = async (postId) => {
     try {
-      await axios.put(`${API_URL}/posts/${postId}/like`, {}, authHeader());
+      await api.put(`/posts/${postId}/like`);
     } catch (err) {
       console.error("Error liking post:", err);
     }
@@ -111,42 +116,39 @@ function HomePage() {
 
   return (
     <Container maxWidth="md">
-      {user && (
-        <>
-            <Box sx={{ my: 4 }}>
-                <CreatePostForm onPostCreated={handlePostCreated} categories={categories} />
-            </Box>
+      <Box sx={{ my: 4 }}>
 
-            <Box sx={{ mb: 2, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-              <Chip
-                label="All Posts"
-                onClick={() => setSelectedCategory(null)}
-                color={!selectedCategory ? 'primary' : 'default'}
-              />
-              {categories.map((cat) => (
-                <Chip
-                  key={cat._id}
-                  label={cat.name}
-                  onClick={() => setSelectedCategory(cat._id)}
-                  color={selectedCategory === cat._id ? 'primary' : 'default'}
-                  variant="outlined"
-                />
-              ))}
-            </Box>
 
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                {posts.map((post) => (
-                <PostCard 
-                    key={post._id} 
-                    post={post}
-                    onCommentAdded={handleCommentAdded}
-                    onCommentDeleted={handleCommentDeleted}
-                    onLikePost={handleLikePost} // Pass the new handler
-                />
-                ))}
-            </Box>
-        </>
-      )}
+        <Typography variant="h5" sx={{ mb: 2 }}>Categories</Typography>
+        <Box sx={{ mb: 4, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+          <Chip
+            label="All Posts"
+            onClick={() => setSelectedCategory(null)}
+            color={!selectedCategory ? 'primary' : 'default'}
+          />
+          {categories.map((cat) => (
+            <Chip
+              key={cat._id}
+              label={cat.name}
+              onClick={() => setSelectedCategory(cat._id)}
+              color={selectedCategory === cat._id ? 'primary' : 'default'}
+              variant="outlined"
+            />
+          ))}
+        </Box>
+
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {posts.map((post) => (
+            <PostCard
+              key={post._id}
+              post={post}
+              onCommentAdded={handleCommentAdded}
+              onCommentDeleted={handleCommentDeleted}
+              onLikePost={handleLikePost}
+            />
+          ))}
+        </Box>
+      </Box>
     </Container>
   );
 }
