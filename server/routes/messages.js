@@ -43,28 +43,6 @@ router.get('/', auth, async (req, res) => {
 });
 
 // GET /api/messages/:userId - Fetch messages with specific user
-router.get('/:userId', auth, async (req, res) => {
-  try {
-    const userId = req.user.id;
-    const otherUserId = req.params.userId;
-
-    const messages = await Message.find({
-      $or: [
-        { sender: userId, receiver: otherUserId },
-        { sender: otherUserId, receiver: userId }
-      ]
-    })
-    .populate('sender', 'name email')
-    .populate('receiver', 'name email')
-    .sort({ timestamp: 1 });
-
-    res.json(messages);
-  } catch (err) {
-    console.error("Fetch messages error:", err.message);
-    res.status(500).json('Error: ' + err.message);
-  }
-});
-
 // POST /api/messages - Send a new message
 router.post('/', auth, async (req, res) => {
   try {
@@ -82,12 +60,14 @@ router.post('/', auth, async (req, res) => {
     });
 
     const savedMessage = await newMessage.save();
+
     const populatedMessage = await Message.findById(savedMessage._id)
       .populate('sender', 'name email')
       .populate('receiver', 'name email');
 
     // Create notification for the receiver
     const Notification = require('../models/notification.model');
+
     const existingNotification = await Notification.findOne({
       recipient: receiverId,
       sender: senderId,
@@ -95,28 +75,41 @@ router.post('/', auth, async (req, res) => {
       read: false
     });
 
+    let populatedNotification = null;
+
     if (!existingNotification) {
       const notification = await Notification.create({
         recipient: receiverId,
         sender: senderId,
         type: 'message'
       });
+
       // Populate sender data for real-time notification
-      const populatedNotification = await Notification.findById(notification._id).populate('sender', 'name email');
-      const io = req.app.get('socketio');
-      const userSocketMap = req.app.get('userSocketMap');
-      const recipientSocketId = userSocketMap.get(receiverId);
-      if (recipientSocketId) {
-        io.to(recipientSocketId).emit('new_notification', populatedNotification);
+      populatedNotification = await Notification.findById(notification._id)
+        .populate('sender', 'name email');
+    }
+
+    // Emit message and notification via sockets
+    const io = req.app.get('socketio');
+    const userSocketMap = req.app.get('userSocketMap');
+
+    const receiverSocketId = userSocketMap.get(receiverId);
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit('receiveMessage', populatedMessage);
+
+      if (populatedNotification) {
+        io.to(receiverSocketId).emit('newNotification', populatedNotification);
       }
     }
 
     res.json(populatedMessage);
+
   } catch (err) {
     console.error("Send message error:", err.message);
-    res.status(500).json('Error: ' + err.message);
+    res.status(500).json({ error: err.message });
   }
 });
+
 
 // PUT /api/messages/:id/read - Mark message as read
 router.put('/:id/read', auth, async (req, res) => {

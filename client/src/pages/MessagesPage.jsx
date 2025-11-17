@@ -27,7 +27,7 @@ function MessagesPage() {
       }
 
       // Set up socket connection for real-time updates
-      const newSocket = io('http://localhost:5001');
+      const newSocket = io(import.meta.env.VITE_API_URL.replace('/api', ''));
       newSocket.emit('addUser', user.id);
       setSocket(newSocket);
 
