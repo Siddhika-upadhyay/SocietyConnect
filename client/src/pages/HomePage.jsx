@@ -6,7 +6,8 @@ import PostCard from '../components/PostCard';
 import { AuthContext, api } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
-const SOCKET_URL = import.meta.env.VITE_API_URL;
+const SOCKET_URL = import.meta.env.VITE_API_URL.replace('/api', '');
+
 
 function HomePage({ searchQuery: propSearchQuery }) {
   const [posts, setPosts] = useState([]);

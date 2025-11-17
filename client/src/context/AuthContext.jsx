@@ -6,7 +6,7 @@ export const AuthContext = createContext();
 
 // A helper function to create an axios instance
 export const api = axios.create({
-  baseURL: 'http://localhost:5001/api',
+ baseURL: import.meta.env.VITE_API_URL,
 });
 
 // Add an interceptor to automatically include the auth token
@@ -46,7 +46,9 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const connectSocket = (userId) => {
-    const newSocket = io('http://localhost:5001');
+    const SOCKET_URL = import.meta.env.VITE_API_URL.replace('/api', '');
+const newSocket = io(SOCKET_URL);
+
     setSocket(newSocket);
     newSocket.emit('addUser', userId);
     newSocket.on('new_notification', (newNotification) => {
