@@ -7,15 +7,14 @@ import PersonIcon from '@mui/icons-material/Person';
 import SearchIcon from '@mui/icons-material/Search';
 import { AuthContext } from '../context/AuthContext';
 import { ThemeContext } from '../context/ThemeContext';
-import NotificationMenu from './NotificationMenu'; // Import the new component
-import CreatePostForm from './CreatePostForm'; // Import CreatePostForm
-import ThemeSelector from './ThemeSelector'; // Import ThemeSelector
-
+import NotificationMenu from './NotificationMenu'; 
+import CreatePostForm from './CreatePostForm'; 
+import ThemeSelector from './ThemeSelector'; 
 // Notification sound
 const notificationSound = new Audio('/notification.mp3');
 
 function Navbar({ onPostCreated, categories, searchQuery, onSearchChange }) {
-  const { user, logout, notifications, markNotificationsAsRead, unreadMessagesCount } = useContext(AuthContext);
+  const { user, logout, notifications, markNotificationsAsRead, unreadMessagesCount, totalUnreadMessages } = useContext(AuthContext);
   const { theme } = useContext(ThemeContext);
   const navigate = useNavigate();
   const [isScrolled, setIsScrolled] = useState(false);
@@ -33,8 +32,6 @@ function Navbar({ onPostCreated, categories, searchQuery, onSearchChange }) {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
-  // Calculate the number of unread notifications
   const unreadCount = notifications.filter(n => !n.read).length;
 
   const handleLogout = () => {
@@ -47,8 +44,6 @@ function Navbar({ onPostCreated, categories, searchQuery, onSearchChange }) {
 
   const handleNotificationClick = (event) => {
     setAnchorEl(event.currentTarget);
-    // Remove the automatic mark as read when opening the menu
-    // Notifications will be marked as read when clicked individually
   };
 
   const handleNotificationClose = () => {
@@ -67,7 +62,6 @@ function Navbar({ onPostCreated, categories, searchQuery, onSearchChange }) {
     setProfileAnchorEl(null);
   };
 
-  // Post modal state
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
 
   const handlePostClick = () => {
@@ -174,7 +168,7 @@ function Navbar({ onPostCreated, categories, searchQuery, onSearchChange }) {
                     transition: 'color 0.3s ease'
                   }}
                 >
-                  <Badge badgeContent={unreadMessagesCount} color="error">
+                  <Badge badgeContent={totalUnreadMessages} color="error">
                     <MessageIcon />
                   </Badge>
                 </IconButton>
