@@ -27,6 +27,12 @@ export const AuthProvider = ({ children }) => {
   const [socket, setSocket] = useState(null);
   const [notifications, setNotifications] = useState([]);
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
+  const [totalUnreadMessages, setTotalUnreadMessages] = useState(0);
+
+  // Function to update total unread messages
+  const updateTotalUnreadMessages = (count) => {
+    setTotalUnreadMessages(count);
+  };
 
   useEffect(() => {
     const storedToken = localStorage.getItem('token');
@@ -47,10 +53,19 @@ export const AuthProvider = ({ children }) => {
 
   const connectSocket = (userId) => {
     const SOCKET_URL = import.meta.env.VITE_API_URL.replace('/api', '');
-const newSocket = io(SOCKET_URL);
+    const newSocket = io(SOCKET_URL);
 
     setSocket(newSocket);
     newSocket.emit('addUser', userId);
+
+    newSocket.on('connect', () => {
+      console.log('Connected to socket server');
+    });
+
+    newSocket.on('disconnect', () => {
+      console.log('Disconnected from socket server');
+    });
+
     newSocket.on('new_notification', (newNotification) => {
       // Play notification sound if enabled
       if (localStorage.getItem('notificationSound') !== 'false') {
@@ -59,16 +74,19 @@ const newSocket = io(SOCKET_URL);
       }
       setNotifications((prevNotifications) => [newNotification, ...prevNotifications]);
     });
+
     newSocket.on('receiveMessage', (messageData) => {
+      console.log('Received message:', messageData);
       // Update unread messages count
       setUnreadMessagesCount(prev => prev + 1);
+      setTotalUnreadMessages(prev => prev + 1);
       // Play notification sound for messages if enabled
       if (localStorage.getItem('notificationSound') !== 'false') {
         const audio = new Audio('/notification.mp3');
         audio.play().catch(e => console.log('Audio play failed:', e));
       }
-      // Refresh conversations when new message arrives
-      // This will be handled by the MessagesPage component
+      // Emit a custom event to notify MessagesPage of new message
+      window.dispatchEvent(new CustomEvent('newMessageReceived', { detail: messageData }));
     });
   };
 
@@ -105,6 +123,7 @@ const newSocket = io(SOCKET_URL);
     setSocket(null);
     setNotifications([]);
     setUnreadMessagesCount(0);
+    setTotalUnreadMessages(0);
   };
 
   const register = async (name, email, password, phone) => {
@@ -155,7 +174,9 @@ const newSocket = io(SOCKET_URL);
       notifications,
       markNotificationsAsRead,
       markNotificationAsRead,
-      unreadMessagesCount
+      unreadMessagesCount,
+      totalUnreadMessages,
+      updateTotalUnreadMessages
     }}>
       {children}
     </AuthContext.Provider>

@@ -29,13 +29,18 @@ router.get('/', auth, async (req, res) => {
         };
       }
 
-      // Count unread messages from this user
+      // Count unread messages from this user (only if receiver is current user and message is unread)
       if (msg.receiver._id.toString() === userId && !msg.read) {
         conversations[otherUserId].unreadCount++;
       }
     });
 
-    res.json(Object.values(conversations));
+    // Sort conversations by last message timestamp (most recent first)
+    const sortedConversations = Object.values(conversations).sort((a, b) =>
+      new Date(b.lastMessage.timestamp) - new Date(a.lastMessage.timestamp)
+    );
+
+    res.json(sortedConversations);
   } catch (err) {
     console.error("Fetch conversations error:", err.message);
     res.status(500).json('Error: ' + err.message);
@@ -43,6 +48,28 @@ router.get('/', auth, async (req, res) => {
 });
 
 // GET /api/messages/:userId - Fetch messages with specific user
+router.get('/:userId', auth, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const otherUserId = req.params.userId;
+
+    const messages = await Message.find({
+      $or: [
+        { sender: userId, receiver: otherUserId },
+        { sender: otherUserId, receiver: userId }
+      ]
+    })
+    .populate('sender', 'name email')
+    .populate('receiver', 'name email')
+    .sort({ timestamp: 1 });
+
+    res.json(messages);
+  } catch (err) {
+    console.error("Fetch messages error:", err.message);
+    res.status(500).json('Error: ' + err.message);
+  }
+});
+
 // POST /api/messages - Send a new message
 router.post('/', auth, async (req, res) => {
   try {
