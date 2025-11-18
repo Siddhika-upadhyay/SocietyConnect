@@ -21,9 +21,9 @@ function NotificationMenu({ anchorEl, isOpen, onClose, notifications }) {
         // Navigate to home page
         navigate('/');
         // Scroll to the post if it exists
-        if (notification.post) {
+        if (notification.post && notification.post._id) {
           setTimeout(() => {
-            const postElement = document.getElementById(`post-${notification.post}`);
+            const postElement = document.getElementById(`post-${notification.post._id}`);
             if (postElement) {
               postElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
               // Add temporary highlight

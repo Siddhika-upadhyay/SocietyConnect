@@ -34,7 +34,7 @@ function CreatePostForm({ onPostCreated, categories }) {
     <Card sx={{ p: 2, boxShadow: 'none', border: '1px solid #ddd' }}>
       <Box component="form" onSubmit={handleSubmit}>
         
-                  <FormControl
+          <FormControl
             fullWidth
             sx={{
               mb: 2,

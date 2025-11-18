@@ -51,6 +51,16 @@ export const AuthProvider = ({ children }) => {
     };
   }, []);
 
+  // Periodic refetch of notifications every 30 seconds to catch any missed ones
+  useEffect(() => {
+    if (user && token) {
+      const interval = setInterval(() => {
+        fetchNotifications(token);
+      }, 30000); // 30 seconds
+      return () => clearInterval(interval);
+    }
+  }, [user, token]);
+
   const connectSocket = (userId) => {
     const SOCKET_URL = import.meta.env.VITE_API_URL.replace('/api', '');
     const newSocket = io(SOCKET_URL);
@@ -67,6 +77,7 @@ export const AuthProvider = ({ children }) => {
     });
 
     newSocket.on('new_notification', (newNotification) => {
+      console.log('Received new notification:', newNotification);
       // Play notification sound if enabled
       if (localStorage.getItem('notificationSound') !== 'false') {
         const audio = new Audio('/notification.mp3');
@@ -83,7 +94,7 @@ export const AuthProvider = ({ children }) => {
       // Play notification sound for messages if enabled
       if (localStorage.getItem('notificationSound') !== 'false') {
         const audio = new Audio('/notification.mp3');
-        audio.play().catch(e => console.log('Audio play failed:', e));
+        audio.play().catch(e => console.log('Audio play failed for message:', e));
       }
       // Emit a custom event to notify MessagesPage of new message
       window.dispatchEvent(new CustomEvent('newMessageReceived', { detail: messageData }));

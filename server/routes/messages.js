@@ -125,7 +125,7 @@ router.post('/', auth, async (req, res) => {
       io.to(receiverSocketId).emit('receiveMessage', populatedMessage);
 
       if (populatedNotification) {
-        io.to(receiverSocketId).emit('newNotification', populatedNotification);
+        io.to(receiverSocketId).emit('new_notification', populatedNotification);
       }
     }
 
