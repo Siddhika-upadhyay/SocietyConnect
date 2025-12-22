@@ -11,22 +11,20 @@ function NotificationMenu({ anchorEl, isOpen, onClose, notifications }) {
 
   const handleNotificationClick = async (notification) => {
     try {
-      // Mark notification as read using context function
       await markNotificationAsRead(notification._id);
 
-      // Navigate based on notification type
       if (notification.type === 'message') {
         navigate(`/messages/${notification.sender._id}`);
       } else if (notification.type === 'comment' || notification.type === 'like') {
-        // Navigate to home page
+
         navigate('/');
-        // Scroll to the post if it exists
+
         if (notification.post && notification.post._id) {
           setTimeout(() => {
             const postElement = document.getElementById(`post-${notification.post._id}`);
             if (postElement) {
               postElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-              // Add temporary highlight
+
               postElement.style.boxShadow = '0 0 20px rgba(25, 118, 210, 0.5)';
               setTimeout(() => {
                 postElement.style.boxShadow = '';
@@ -41,8 +39,6 @@ function NotificationMenu({ anchorEl, isOpen, onClose, notifications }) {
       console.error('Error marking notification as read:', err);
     }
   };
-
-  // --- NEW: Helper function to render notification text ---
   const renderNotificationText = (notif) => {
     switch (notif.type) {
       case 'comment':
@@ -56,12 +52,17 @@ function NotificationMenu({ anchorEl, isOpen, onClose, notifications }) {
     }
   };
 
+
   return (
     <Menu
       anchorEl={anchorEl}
       open={isOpen}
       onClose={onClose}
-      MenuListProps={{ 'aria-labelledby': 'notification-button' }}
+      disableAutoFocusItem
+      MenuListProps={{ 
+        'aria-labelledby': 'notification-button',
+        role: 'menu'
+      }}
       sx={{
         maxHeight: 400,
         '& .MuiPaper-root': {
@@ -69,6 +70,11 @@ function NotificationMenu({ anchorEl, isOpen, onClose, notifications }) {
           bgcolor: 'var(--background-card)',
           color: 'var(--text-primary)',
           border: '1px solid var(--text-secondary)',
+        },
+        '& .MuiMenuItem-root': {
+          '&:focus': {
+            backgroundColor: 'action.selected',
+          },
         }
       }}
     >

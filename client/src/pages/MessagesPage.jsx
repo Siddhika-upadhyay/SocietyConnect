@@ -20,35 +20,27 @@ function MessagesPage() {
     if (user) {
       fetchConversations();
       if (userId) {
-        // If userId is provided in URL, fetch that conversation
         fetchMessages(userId);
-        // Find and set the selected conversation
         setSelectedConversation({ user: { _id: userId, name: 'Loading...' } });
       }
 
-      // Set up socket connection for real-time updates
       const newSocket = io(import.meta.env.VITE_API_URL.replace('/api', ''));
       newSocket.emit('addUser', user.id);
       setSocket(newSocket);
 
-      // Listen for new messages
       newSocket.on('receiveMessage', (messageData) => {
         console.log('MessagesPage received message:', messageData);
-        // Refresh conversations to update unread counts
+ 
         fetchConversations();
-        // If the message is for the current conversation, refresh messages
         if (selectedConversation && (messageData.sender._id === selectedConversation.user._id || messageData.receiver._id === selectedConversation.user._id)) {
           fetchMessages(selectedConversation.user._id);
         }
       });
-
-      // Listen for custom event from AuthContext
       const handleNewMessage = (event) => {
         const messageData = event.detail;
         console.log('MessagesPage received custom event:', messageData);
-        // Refresh conversations to update unread counts
+       
         fetchConversations();
-        // If the message is for the current conversation, refresh messages
         if (selectedConversation && (messageData.sender._id === selectedConversation.user._id || messageData.receiver._id === selectedConversation.user._id)) {
           fetchMessages(selectedConversation.user._id);
         }
@@ -67,9 +59,8 @@ function MessagesPage() {
     try {
       const response = await api.get('/messages');
       setConversations(response.data);
-      // Calculate total unread messages for navbar
       const totalUnread = response.data.reduce((sum, conv) => sum + (conv.unreadCount || 0), 0);
-      // Update the context with total unread count
+
       updateTotalUnreadMessages(totalUnread);
     } catch (err) {
       console.error('Error fetching conversations:', err);
@@ -80,12 +71,11 @@ function MessagesPage() {
     try {
       const response = await api.get(`/messages/${otherUserId}`);
       setMessages(response.data);
-      // Update selected conversation with user details
+
       if (userId) {
-        const userResponse = await api.get(`/users/${otherUserId}`);
+        const userResponse = await api.get(`/users/id/${otherUserId}`);
         setSelectedConversation({ user: userResponse.data });
       }
-      // Refresh conversations to update unread counts after a short delay
       setTimeout(() => {
         fetchConversations();
       }, 100);
@@ -97,13 +87,11 @@ function MessagesPage() {
   const handleConversationClick = (conversation) => {
     setSelectedConversation(conversation);
     fetchMessages(conversation.user._id);
-    // Reset unread count for this conversation in the state
     setConversations(prevConversations =>
       prevConversations.map(conv =>
         conv.user._id === conversation.user._id ? { ...conv, unreadCount: 0 } : conv
       )
     );
-    // Update total unread count
     const newTotalUnread = conversations.reduce((sum, conv) =>
       conv.user._id === conversation.user._id ? sum : sum + (conv.unreadCount || 0), 0
     );
@@ -112,7 +100,6 @@ function MessagesPage() {
 
   const handleMessageSent = (newMessage) => {
     setMessages(prev => [...prev, newMessage]);
-    // Update conversations to reflect new message
     fetchConversations();
   };
 

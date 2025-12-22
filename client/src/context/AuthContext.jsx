@@ -3,22 +3,17 @@ import axios from 'axios';
 import { io } from 'socket.io-client';
 
 export const AuthContext = createContext();
-
-// A helper function to create an axios instance
 export const api = axios.create({
  baseURL: import.meta.env.VITE_API_URL,
 });
-
-// Add an interceptor to automatically include the auth token
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) {
-    config.headers['x-auth-token'] = token;
+    config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
-}, (error) => {
-  return Promise.reject(error);
 });
+
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -29,7 +24,6 @@ export const AuthProvider = ({ children }) => {
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
   const [totalUnreadMessages, setTotalUnreadMessages] = useState(0);
 
-  // Function to update total unread messages
   const updateTotalUnreadMessages = (count) => {
     setTotalUnreadMessages(count);
   };
@@ -50,13 +44,11 @@ export const AuthProvider = ({ children }) => {
       if(socket) socket.disconnect();
     };
   }, []);
-
-  // Periodic refetch of notifications every 30 seconds to catch any missed ones
   useEffect(() => {
     if (user && token) {
       const interval = setInterval(() => {
         fetchNotifications(token);
-      }, 30000); // 30 seconds
+      }, 30000); 
       return () => clearInterval(interval);
     }
   }, [user, token]);
@@ -73,7 +65,7 @@ export const AuthProvider = ({ children }) => {
     });
 
     newSocket.on('disconnect', () => {
-      console.log('Disconnected from socket server');
+      console.log('Disconnected from soc    ket server');
     });
 
     newSocket.on('new_notification', (newNotification) => {
@@ -101,14 +93,15 @@ export const AuthProvider = ({ children }) => {
     });
   };
 
+
   const fetchNotifications = async (authToken) => {
     try {
       const res = await api.get('/notifications');
       setNotifications(res.data);
     } catch (err) {
       console.error("Failed to fetch notifications", err);
-      if (err.response && err.response.status === 400) {
-        // Token might be invalid, logout
+      if (err.response && err.response.status === 401) {
+        console.log("Unauthorized - logging out user");
         logout();
       }
     }
@@ -139,7 +132,6 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (name, email, password, phone) => {
     const response = await api.post('/users/register', { name, email, password, phone });
-    // Auto-login after successful registration
     const { token, user } = response.data;
     setToken(token);
     setUser(user);
@@ -149,6 +141,7 @@ export const AuthProvider = ({ children }) => {
     connectSocket(user.id);
   };
   
+
   const markNotificationsAsRead = async () => {
     try {
       await api.post('/notifications/mark-read');
@@ -157,7 +150,8 @@ export const AuthProvider = ({ children }) => {
       );
     } catch (err) {
       console.error("Failed to mark notifications as read", err);
-      if (err.response && err.response.status === 400) {
+      if (err.response && err.response.status === 401) {
+        console.log("Unauthorized - logging out user");
         logout();
       }
     }

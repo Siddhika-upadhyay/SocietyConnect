@@ -160,51 +160,15 @@ function PostCard({ post, onCommentAdded, onCommentDeleted, onLikePost, onPostUp
           </Typography>
         </Box>
 
+
         <Divider sx={{ my: 2 }} />
 
-        <Typography variant="h6" component="h3" sx={{ mb: 2, fontWeight: 600, color: 'var(--text-primary)' }}>
-          Comments ({post.comments.length})
-        </Typography>
-        <CommentList comments={post.comments} onCommentDeleted={onCommentDeleted} />
-
-        {onCommentAdded && ( // Always show comment form, but handle auth in submit
-            <Box component="form" onSubmit={handleCommentSubmit} sx={{ mt: 3, display: 'flex', gap: 1 }}>
-                <TextField
-                    size="small"
-                    variant="outlined"
-                    placeholder="Write a comment..."
-                    fullWidth
-                    value={commentText}
-                    onChange={(e) => setCommentText(e.target.value)}
-                    sx={{
-                        '& .MuiOutlinedInput-root': {
-                            borderRadius: 2,
-                            backgroundColor: 'var(--background-card)',
-                            color: 'var(--text-primary)',
-                            '& fieldset': {
-                                borderColor: 'var(--text-secondary)',
-                            },
-                            '&:hover fieldset': {
-                                borderColor: 'var(--primary)',
-                            },
-                            '&.Mui-focused fieldset': {
-                                borderColor: 'var(--primary)',
-                            },
-                        },
-                        '& .MuiInputBase-input': {
-                            color: 'var(--text-primary)',
-                            '&::placeholder': {
-                                color: 'var(--text-secondary)',
-                                opacity: 1,
-                            },
-                        },
-                    }}
-                />
-                <Button type="submit" variant="contained" size="small" sx={{ borderRadius: 2, px: 3, bgcolor: 'var(--primary)' }}>
-                    Add
-                </Button>
-            </Box>
-        )}
+        {/* Nested Comments Component */}
+        <CommentList 
+          postId={post._id} 
+          onCommentDeleted={onCommentDeleted}
+          onCommentAdded={onCommentAdded}
+        />
       </CardContent>
 
       {/* Edit Dialog */}

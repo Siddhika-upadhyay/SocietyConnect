@@ -1,57 +1,172 @@
-import React, { useContext, useState } from 'react';
-import { Box, Typography, Divider, IconButton, Link, Button } from '@mui/material';
-import { Link as RouterLink } from 'react-router-dom'; // Import RouterLink
-import DeleteIcon from '@mui/icons-material/Delete';
+import React, { useContext, useState, useEffect } from 'react';
+import { Box, Typography, Divider, IconButton, Button, CircularProgress } from '@mui/material';
+import { Add, Refresh } from '@mui/icons-material';
 import { AuthContext } from '../context/AuthContext';
 import { ThemeContext } from '../context/ThemeContext';
+import { api } from '../context/AuthContext';
+import CommentItem from './CommentItem';
+import ReplyForm from './ReplyForm';
 
-function CommentList({ comments, onCommentDeleted }) {
+function CommentList({ postId, comments: initialComments, onCommentDeleted, onCommentAdded }) {
   const { user } = useContext(AuthContext);
   const { theme } = useContext(ThemeContext);
-  const [showAllComments, setShowAllComments] = useState(false);
+  const [comments, setComments] = useState(initialComments || []);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showMainCommentForm, setShowMainCommentForm] = useState(false);
 
-  if (!comments || comments.length === 0) {
-    return <Typography variant="body2" color="text.secondary" sx={{ mt: 2, fontStyle: 'italic' }}>No comments yet.</Typography>;
+  useEffect(() => {
+    if (initialComments) {
+      setComments(initialComments);
+    }
+  }, [initialComments]);
+
+  // Fetch comments from API
+  const fetchComments = async () => {
+    if (!postId) return;
+    
+    setIsLoading(true);
+    try {
+      const response = await api.get(`/posts/${postId}/comments`);
+      setComments(response.data.comments || []);
+    } catch (error) {
+      console.error('Error fetching comments:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle reply added
+  const handleReplyAdded = (newReply, parentId) => {
+    const addReplyToComments = (commentList) => {
+      return commentList.map(comment => {
+        if (comment._id === parentId) {
+          return {
+            ...comment,
+            replies: [...(comment.replies || []), newReply],
+            replyCount: (comment.replyCount || 0) + 1
+          };
+        } else if (comment.replies && comment.replies.length > 0) {
+          return {
+            ...comment,
+            replies: addReplyToComments(comment.replies)
+          };
+        }
+        return comment;
+      });
+    };
+
+    setComments(prev => addReplyToComments(prev));
+    onCommentAdded?.(newReply);
+  };
+
+  // Handle comment deleted
+  const handleCommentDeleted = (commentId) => {
+    const removeComment = (commentList) => {
+      return commentList.filter(comment => comment._id !== commentId);
+    };
+
+    setComments(prev => removeComment(prev));
+    onCommentDeleted?.(commentId);
+  };
+
+  // Handle reply deleted
+  const handleReplyDeleted = (replyId, parentId) => {
+    const removeReply = (commentList) => {
+      return commentList.map(comment => {
+        if (comment._id === parentId) {
+          return {
+            ...comment,
+            replies: (comment.replies || []).filter(reply => reply._id !== replyId),
+            replyCount: Math.max(0, (comment.replyCount || 0) - 1)
+          };
+        } else if (comment.replies && comment.replies.length > 0) {
+          return {
+            ...comment,
+            replies: removeReply(comment.replies)
+          };
+        }
+        return comment;
+      });
+    };
+
+    setComments(prev => removeReply(prev));
+    onCommentDeleted?.(replyId);
+  };
+
+  if (isLoading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
+        <CircularProgress size={24} />
+      </Box>
+    );
   }
 
-  const displayedComments = showAllComments ? comments : comments.slice(0, 2);
-
   return (
-    <Box sx={{ mt: 2 }}>
-      {displayedComments.map((comment, index) => (
-        <Box key={comment._id || index} sx={{ mb: 1 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Typography
-              variant="body2"
-              sx={{
-                fontStyle: comment.isDeleted ? 'italic' : 'normal',
-                color: theme === 'dark' ? '#ffffff' : (comment.isDeleted ? 'text.secondary' : 'text.primary')
-              }}
+    <Box sx={{ mt: 3 }}>
+      {/* Comments Header */}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+        <Typography variant="h6" sx={{ color: theme === 'dark' ? 'text.primary' : 'text.primary' }}>
+          Comments ({comments.length})
+        </Typography>
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <IconButton size="small" onClick={fetchComments} disabled={isLoading}>
+            <Refresh fontSize="small" />
+          </IconButton>
+          {user && !showMainCommentForm && (
+            <Button
+              variant="outlined"
+              size="small"
+              startIcon={<Add />}
+              onClick={() => setShowMainCommentForm(true)}
+              sx={{ textTransform: 'none' }}
             >
-              {/* --- Make the name a clickable link --- */}
-              <Link component={RouterLink} to={`/profile/${comment.author?.email}`} sx={{ fontWeight: 'bold', color: theme === 'dark' ? '#ffffff' : 'inherit' }}>
-                {comment.author ? comment.author.name : 'User'}
-              </Link>
-              : {comment.text}
-            </Typography>
-            {user && comment.author && user.id === comment.author._id && !comment.isDeleted && (
-              <IconButton size="small" onClick={() => onCommentDeleted(comment._id)}>
-                <DeleteIcon fontSize="small" />
-              </IconButton>
-            )}
-          </Box>
-          {index < displayedComments.length - 1 && <Divider sx={{ my: 1 }} />}
+              Add Comment
+            </Button>
+          )}
         </Box>
-      ))}
-      {comments.length > 2 && (
-        <Box sx={{ mt: 1, textAlign: 'center' }}>
-          <Button
-            size="small"
-            onClick={() => setShowAllComments(!showAllComments)}
-            sx={{ color: theme === 'dark' ? '#ffffff' : 'primary.main' }}
-          >
-            {showAllComments ? 'Show Less' : `Show All ${comments.length} Comments`}
-          </Button>
+      </Box>
+
+      {/* Main Comment Form */}
+      {showMainCommentForm && (
+        <Box sx={{ mb: 3 }}>
+          <ReplyForm
+            postId={postId}
+            onReplyAdded={(newComment) => {
+              setComments(prev => [newComment, ...prev]);
+              setShowMainCommentForm(false);
+              onCommentAdded?.(newComment);
+            }}
+            onCancel={() => setShowMainCommentForm(false)}
+            placeholder="Write a comment..."
+          />
+        </Box>
+      )}
+
+      {/* Comments List */}
+      {comments.length === 0 ? (
+        <Typography 
+          variant="body2" 
+          color="text.secondary" 
+          sx={{ 
+            mt: 2, 
+            fontStyle: 'italic',
+            textAlign: 'center',
+            py: 4
+          }}
+        >
+          No comments yet. Be the first to comment!
+        </Typography>
+      ) : (
+        <Box>
+          {comments.map((comment) => (
+            <CommentItem
+              key={comment._id}
+              comment={comment}
+              postId={postId}
+              onReplyAdded={(newReply) => handleReplyAdded(newReply, comment._id)}
+              onCommentDeleted={(replyId) => handleReplyDeleted(replyId, comment._id)}
+            />
+          ))}
         </Box>
       )}
     </Box>

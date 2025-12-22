@@ -69,14 +69,15 @@ function ProfilePage() {
     }
   };
 
-  const handleCommentAdded = async (postId, text) => {
-    await api.post(`/posts/${postId}/comments`, { text });
+
+  const handleCommentAdded = async (commentData) => {
+    // Nested comments are handled by the CommentList component
+    console.log('Comment added:', commentData);
   };
 
   const handleCommentDeleted = async (commentId) => {
-    if (window.confirm('Are you sure you want to delete this comment?')) {
-      await api.delete(`/posts/comments/${commentId}`);
-    }
+    // Nested comments are handled by the CommentList component
+    console.log('Comment deleted:', commentId);
   };
 
   const handleLikePost = async (postId) => {

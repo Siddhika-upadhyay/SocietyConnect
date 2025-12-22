@@ -83,7 +83,38 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// --- NEW: GET User Profile Page ---
+
+// --- NEW: GET User by ID (for messages) ---
+// This route fetches user data by ID (used in messages)
+router.get('/id/:userId', async (req, res) => {
+  try {
+    // Validate that userId is a valid ObjectId
+    if (!/^[0-9a-fA-F]{24}$/.test(req.params.userId)) {
+      return res.status(400).json({ msg: 'Invalid user ID format' });
+    }
+
+    // Find the user by their ID
+    const user = await User.findById(req.params.userId).select('-password');
+    if (!user) {
+      return res.status(404).json({ msg: 'User not found' });
+    }
+
+    // Return user data in format expected by MessagesPage
+    res.json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
+      avatar: user.avatar || null
+    });
+
+  } catch (err) {
+    console.error("User fetch error:", err.message);
+    res.status(500).json('Error: ' + err.message);
+  }
+});
+
+// --- GET User Profile Page ---
 // This route fetches a user's profile and all their posts
 router.get('/:email', async (req, res) => {
   try {

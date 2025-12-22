@@ -1,0 +1,5 @@
+MONGO_URI=mongodb+srv://siddhika-upadhyay:Zt4PndtuZL9uL17k@clustor12.gcwzzwz.mongodb.net/?appName=clustor12
+JWT_SECRET=a_very_secret_key_that_is_long_and_random
+CLOUDINARY_CLOUD_NAME=ddncmf1fr
+CLOUDINARY_API_KEY=753139891843678
+CLOUDINARY_API_SECRET=nqxVmT8CNvvB5XNBynrh8v3ioyI

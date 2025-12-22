@@ -59,17 +59,29 @@ function HomePage({ searchQuery: propSearchQuery }) {
       }
     });
     
+
     socket.on('comment_added', (data) => {
       setPosts((prevPosts) => 
         prevPosts.map((post) => 
           post._id === data.postId 
-            ? { ...post, comments: [...post.comments, data.comment] } 
+            ? { ...post, commentCount: (post.commentCount || 0) + 1 } 
             : post
         )
       );
     });
     
-    socket.on('comment_deleted', (data) => { /* ... */ });
+    socket.on('comment_deleted', (data) => {
+      setPosts((prevPosts) =>
+        prevPosts.map((post) =>
+          post._id === data.postId
+            ? {
+                ...post,
+                commentCount: Math.max(0, (post.commentCount || 0) - 1)
+              }
+            : post
+        )
+      );
+    });
 
     // --- NEW: Socket listener for like/unlike updates ---
     socket.on('post_updated', (updatedPost) => {
@@ -96,14 +108,15 @@ function HomePage({ searchQuery: propSearchQuery }) {
     await api.post('/posts', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
   };
 
-  const handleCommentAdded = async (postId, text) => {
-    await api.post(`/posts/${postId}/comments`, { text });
+
+  const handleCommentAdded = async (commentData) => {
+    // Nested comments are handled by the CommentList component
+    console.log('Comment added:', commentData);
   };
 
   const handleCommentDeleted = async (commentId) => {
-    if (window.confirm('Are you sure you want to delete this comment?')) {
-      await api.delete(`/posts/comments/${commentId}`);
-    }
+    // Nested comments are handled by the CommentList component
+    console.log('Comment deleted:', commentId);
   };
 
   // --- NEW: Handler for liking a post ---

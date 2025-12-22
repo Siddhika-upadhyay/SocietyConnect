@@ -10,7 +10,7 @@ import { ThemeContext } from '../context/ThemeContext';
 import NotificationMenu from './NotificationMenu'; 
 import CreatePostForm from './CreatePostForm'; 
 import ThemeSelector from './ThemeSelector'; 
-// Notification sound
+
 const notificationSound = new Audio('/notification.mp3');
 
 function Navbar({ onPostCreated, categories, searchQuery, onSearchChange }) {

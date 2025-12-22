@@ -1,7 +1,17 @@
+
+
 const jwt = require('jsonwebtoken');
 
 function auth(req, res, next) {
-  const token = req.header('x-auth-token');
+  let token = req.header('x-auth-token');
+
+  // If no x-auth-token header, check for Authorization Bearer token
+  if (!token) {
+    const authHeader = req.header('Authorization');
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      token = authHeader.substring(7); // Remove 'Bearer ' prefix
+    }
+  }
 
   // Check for token
   if (!token) {
@@ -15,7 +25,7 @@ function auth(req, res, next) {
     req.user = decoded;
     next();
   } catch (e) {
-    res.status(400).json({ msg: 'Token is not valid' });
+    res.status(401).json({ msg: 'Token is not valid' });
   }
 }
 

@@ -27,6 +27,25 @@ const userSchema = new Schema({
   isAdmin: {
     type: Boolean,
     default: false
+  },
+  isOnline: {
+    type: Boolean,
+    default: false
+  },
+  lastSeen: {
+    type: Date,
+    default: Date.now
+  },
+  avatar: {
+    type: String
+  },
+  status: {
+    type: String,
+    enum: ['available', 'busy', 'away', 'offline'],
+    default: 'available'
+  },
+  socketId: {
+    type: String
   }
 }, {
   timestamps: true,
