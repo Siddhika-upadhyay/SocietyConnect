@@ -1,0 +1,175 @@
+/* Dynamic Theme Variables */
+:root {
+  --primary: #8B0000;
+  --primary-light: #ffe6e8;
+  --primary-dark: #5C0000;
+  --secondary: #ffe6e8;
+  --accent: #ffe6e8;
+  --background: #ffffff;
+  --background-card: #f8f9fa;
+  --background-hover: #f0f0f0;
+  --text-primary: #000000;
+  --text-secondary: #666666;
+  --navbar-bg: rgba(255, 255, 255, 0.95);
+  --navbar-text: #000000;
+}
+
+/* Dark Theme */
+[data-theme="dark"] {
+  --primary: #8B0000;
+  --primary-light: #FF6B6B;
+  --primary-dark: #5C0000;
+  --secondary: #FF6B6B;
+  --accent: #FF8C8C;
+  --background: #0a0a0a;
+  --background-card: #1a1a1a;
+  --background-hover: #2a2a2a;
+  --text-primary: #ffffff;
+  --text-secondary: #cccccc;
+  --navbar-bg: rgba(10, 10, 10, 0.95);
+  --navbar-text: #ffffff;
+}
+
+/* Custom Theme */
+[data-theme="custom"] {
+  --primary: var(--custom-primary, #2e7d32);
+  --primary-light: var(--custom-primary, #4caf50);
+  --primary-dark: var(--custom-primary, #1b5e20);
+  --secondary: var(--custom-secondary, #66bb6a);
+  --accent: var(--custom-secondary, #81c784);
+  --background: var(--custom-background, #f1f8e9);
+  --background-card: var(--custom-surface, #ffffff);
+  --background-hover: var(--custom-hover, #e8f5e8);
+  --text-primary: var(--custom-text, #1b5e20);
+  --text-secondary: var(--custom-text, #388e3c);
+}
+
+body {
+  background: var(--background);
+  min-height: 100vh;
+  margin: 0;
+  padding-top: 64px; /* Account for fixed navbar height */
+  font-family: 'Roboto', sans-serif;
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* Cards with professional styling */
+.MuiPaper-root {
+  background-color: var(--background-card) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+  border: 1px solid rgba(0, 0, 0, 0.05) !important;
+  transition: all 0.3s ease !important;
+}
+
+.MuiPaper-root:hover {
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15) !important;
+  transform: translateY(-2px);
+}
+
+/* Professional buttons */
+.MuiButton-contained {
+  background: linear-gradient(45deg, var(--primary) 30%, var(--primary-light) 90%) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+  font-weight: 600 !important;
+  text-transform: none !important;
+  transition: all 0.3s ease !important;
+}
+
+.MuiButton-contained:hover {
+  background: linear-gradient(45deg, var(--primary-dark) 60%, var(--primary) 100%) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+  transform: translateY(-1px);
+}
+
+/* Professional chips */
+.MuiChip-root {
+  background: linear-gradient(45deg, var(--accent) 30%, var(--secondary) 90%) !important;
+  color: var(--text-primary) !important;
+  border-radius: 16px !important;
+  font-weight: 500 !important;
+  transition: all 0.3s ease !important;
+}
+
+.MuiChip-root:hover {
+  background: linear-gradient(45deg, var(--secondary) 60%, var(--primary-light) 100%) !important;
+  transform: scale(1.05);
+}
+
+/* Text fields with accents */
+.MuiTextField-root .MuiOutlinedInput-root {
+  border-radius: 8px !important;
+  transition: all 0.3s ease !important;
+}
+
+.MuiTextField-root .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+  border-color: var(--primary-light) !important;
+}
+
+.MuiTextField-root .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+  border-color: var(--primary) !important;
+  border-width: 2px !important;
+}
+
+/* Professional app bar */
+.MuiAppBar-root {
+  background: var(--navbar-bg) !important;
+  backdrop-filter: blur(10px) !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1) !important;
+  border-radius: 0 !important; /* Remove rounded borders */
+  box-shadow: none !important; /* Remove box shadow */
+  transition: all 0.3s ease !important;
+  color: var(--navbar-text) !important;
+}
+
+.MuiAppBar-root.scrolled {
+  background: var(--primary) !important;
+  color: white !important;
+}
+
+/* Interactive elements */
+.MuiIconButton-root {
+  transition: all 0.2s ease !important;
+}
+
+.MuiIconButton-root:hover {
+  background-color: rgba(0, 0, 0, 0.04) !important;
+  transform: scale(1.1);
+}
+
+/* Like button special styling */
+.MuiIconButton-root.MuiIconButton-colorError {
+  transition: all 0.3s ease !important;
+}
+
+.MuiIconButton-root.MuiIconButton-colorError:hover {
+  background-color: rgba(244, 67, 54, 0.1) !important;
+  transform: scale(1.2);
+}
+
+/* Menu items */
+.MuiMenuItem-root {
+  transition: all 0.2s ease !important;
+}
+
+.MuiMenuItem-root:hover {
+  background-color: rgba(0, 0, 0, 0.04) !important;
+}
+
+/* Links */
+.MuiLink-root {
+  color: var(--primary) !important;
+  text-decoration: none !important;
+  transition: all 0.2s ease !important;
+}
+
+.MuiLink-root:hover {
+  color: var(--primary-dark) !important;
+  text-decoration: underline !important;
+}
